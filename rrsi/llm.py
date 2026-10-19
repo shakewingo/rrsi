@@ -28,7 +28,8 @@
 """Claude client for the three search roles (proposer, analyst, critic).
 
 Claude Opus 4.8 via AnthropicVertex, round-robin over the configured GCP
-projects with retry-and-rotate on failure. `cache_prefix` sends a large stable
+projects with retry-and-rotate on failure; with no RRSI_VERTEX_PROJECTS set it
+falls back to the Anthropic API (ANTHROPIC_API_KEY). `cache_prefix` sends a large stable
 leading block (constitution + harness source) as its own ephemeral-cached
 content block so repeated turns pay to read it once.
 """
@@ -57,14 +58,14 @@ _JSON_SUFFIX = ("\n\nOutput ONLY a single valid JSON object. No prose before or 
 
 
 def _client_for(idx: int):
-    from anthropic import AnthropicVertex
-    if not _PROJECTS:
+    from anthropic import Anthropic, AnthropicVertex
+    if not _PROJECTS and not os.environ.get("ANTHROPIC_API_KEY"):
         raise RuntimeError("set RRSI_VERTEX_PROJECTS to a comma-separated list of GCP "
-                           "projects with Claude on Vertex AI enabled")
+                           "projects with Claude on Vertex AI enabled, or ANTHROPIC_API_KEY")
     with _clients_lock:
         c = _clients.get(idx)
         if c is None:
-            c = AnthropicVertex(**_PROJECTS[idx])
+            c = AnthropicVertex(**_PROJECTS[idx]) if _PROJECTS else Anthropic()
             _clients[idx] = c
         return c
 
@@ -97,7 +98,7 @@ def generate(prompt: str, system: str | None = None, max_retries: int = 6,
     content = ([{"type": "text", "text": cache_prefix,
                  "cache_control": {"type": "ephemeral"}},
                 {"type": "text", "text": prompt}] if cache_prefix else prompt)
-    n = len(_PROJECTS)
+    n = len(_PROJECTS) or 1
     start = next(_rr)
     last_err: Exception | None = None
     for attempt in range(max_retries):

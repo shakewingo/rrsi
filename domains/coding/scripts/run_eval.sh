@@ -37,7 +37,7 @@ done
 
 export PATH="$REPO/bin:$PATH"            # docker -> sudo -E docker shim
 export PYTHONPATH="$(cd "$REPO/../.." && pwd)/third_party"   # so --agent harbor_terminus2:AgentHarness resolves
-export VERTEXAI_PROJECT="${VERTEXAI_PROJECT:?set VERTEXAI_PROJECT (GCP project for Vertex AI)}"
+export VERTEXAI_PROJECT="${VERTEXAI_PROJECT:-}"   # only needed for vertex_ai/ policy models
 export VERTEXAI_LOCATION="${VERTEXAI_LOCATION:-global}"
 VENV="${RRSI_CODING_VENV:-$REPO/.venv}"
 
