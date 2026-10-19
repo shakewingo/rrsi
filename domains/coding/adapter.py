@@ -142,7 +142,10 @@ class CodingDomain(Domain):
 
     # ---- task sets ---------------------------------------------------------
     def evolve_ids(self) -> list[str]:
-        return list(self._tasks)
+        # RRSI_CODING_TASKS=a,b restricts D_evolve for cheap debug runs
+        only = [x.strip() for x in os.environ.get("RRSI_CODING_TASKS", "").split(",")
+                if x.strip()]
+        return [t for t in self._tasks if t in only] if only else list(self._tasks)
 
     def heldout_ids(self) -> list[str]:
         return []          # SWE-bench Verified is run as a separate harbor dataset
