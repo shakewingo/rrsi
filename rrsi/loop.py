@@ -396,6 +396,7 @@ class Run:
             log(d.name, f"r{t}{c.variant}: S={dec.S:.4f} dS={dec.delta_S:+.4f} dC={dec.delta_C:+.3f} "
                 f"-> {outcome}: {dec.reason}")
         if winner is not None:
+            # tell whether the winner commit is ancestor node of winner, i.e. git merge-base --is-ancestor <inc_commit> <winner_commit>
             r = G.git(self.repo, "merge-base", "--is-ancestor", inc_entry["commit"], winner.commit)
             if r.returncode != 0:
                 raise SystemExit(f"{winner.commit} does not descend from H_{t} {inc_entry['commit']}")
